@@ -1,0 +1,28 @@
+body
+{
+	width: 100%;
+}
+
+
+table
+{
+border-collapse: collapse;
+border: 2px solid black;
+}
+
+tr
+{
+border: 1px solid black;
+}
+
+.cell
+{
+	height: 50px; width: 50px;
+	border: 1px solid black;
+
+}
+
+.disabled {
+	pointer-events: none;
+	background-color: #eee;
+}
