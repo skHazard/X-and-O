@@ -1,12 +1,20 @@
-"use strict"
+'use strict'
+
+// TODO list
+//
+// - Swap signs
+// - Save player to localStorage
+// - Save games to file.
+// - Cross the winning line.
 
 window.onload = function() {
-  var playerInput = document.getElementsByClassName("player"),
-      newGameButton = document.getElementById("new-game"),
-      swapButton = document.getElementById("swap"),
-      table = document.getElementById("table"),
-      boardCell = document.getElementsByClassName("cell"),
-      signs = ['X', 'O'],
+  var playerInput = document.getElementsByClassName('player'),
+      newGameButton = document.getElementById('new-game'),
+      swapButton = document.getElementById('swap'),
+      table = document.getElementById('table'),
+      boardCell = document.getElementsByClassName('cell'),
+      scoreFromLS = localStorage.getItem('score'),
+      signsArray = ['X', 'O'],
       players = [],
       games = [],
       score = {
@@ -14,7 +22,6 @@ window.onload = function() {
         scored: 0,
         score1: 0
       },
-      scoreFromLS = localStorage.getItem('score'),
       activeGame;
 
   // CONSTRUCTORS ********************
@@ -22,108 +29,106 @@ window.onload = function() {
     this.id = id;
     this.name = name;
     this.sign = sign;
+    // For player statistics in LS
     this.wins = 0;
     this.losses = 0;
     this.draws = 0;
   }
 
-  function Game(id, active, passive) {
+  function Game(id, activeId, passiveId) {
     this.id = id;
     this.winner = null;
-    this.activePlayer = active;
-    this.passivePlayer = passive;
+    this.activePlayerId = activeId;
+    this.passivePlayerId = passiveId;
     this.board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    this.moveCounter = 0;
   }
 
   // Set prototype methods **********************
-  Player.prototype.move = function (e) {
-    var node = document.createTextNode(this.sign);
-    var cell = e.target;
-    var row = cell.id.split('_')[0];
-    var col = cell.id.split('_')[1];
+  Player.prototype.update = function(param) {
+    this[param] += 1;
+  }
 
+  Game.prototype.move = function (e) {
+    var cell = e.target,
+        row = cell.id.split('_')[0],
+        col = cell.id.split('_')[1],
+        sign = players[this.activePlayerId].sign;
+
+    // do nothing if clicked on disabled cell
     if (cell.className.indexOf('cell') < 0) {
       return;
     }
 
-    activeGame.board[row][col] = this.sign;
+    this.board[row][col] = sign;
+    updateCell(cell.id, sign);
 
-    cell.appendChild(node);
-    cell.className += ' disabled';
-    swapButton.className = 'disabled';
-
-    if (activeGame.isFinished()) {
-      // DO finishing stuff (players to LS)
+    if (this.isFinished()) {
+      // TODO finishing stuff (players to LS)
       table.className = 'disabled';
-      score['score' + this.id] += 1;
       setScore();
-
     } else {
-      activeGame.switchPlayer();
-      changePlayerName();
+      this.switchPlayer();
     }
   }
 
   Game.prototype.switchPlayer = function () {
-    this.activePlayer = this.activePlayer === 0 ? 1 : 0;
-    this.passivePlayer = this.passivePlayer === 0 ? 1 : 0;
+    this.activePlayerId = this.activePlayerId === 0 ? 1 : 0;
+    this.passivePlayerId = this.passivePlayerId === 0 ? 1 : 0;
+    changePlayerName();
   }
 
+  // Check if game is finished;
   Game.prototype.isFinished = function() {
-    var isFinished = false;
-    
+    var isFinished = false,
+        board = this.board;
 
-    // Check if game is finished;
-    for(var i = 0; i <= 2 ; i++) {
-      if(this.board[i][0] !== 0 && this.board[i][0] === this.board[i][1] && this.board[i][1] === this.board[i][2]) {
-        this.setWinner();
+    // Cheking rows
+    for (var i = 0; i <= 2 ; i++) {
+      if (board[i][0] !== 0 && board[i][0] === board[i][1] && board[i][1] === board[i][2]) {
+        this.setResult();
         isFinished = true;
       }
     }
 
+    // Cheking cols
     for(var i = 0; i <= 2 ; i++) {
-      if(this.board[0][i] !== 0 && this.board[0][i] === this.board[1][i] && this.board[1][i] === this.board[2][i]) {
-        this.setWinner();
+      if(board[0][i] !== 0 && board[0][i] === board[1][i] && board[1][i] === board[2][i]) {
+        this.setResult();
         isFinished = true;
       }
     }
 
-    if((this.board[0][0] !== 0 && this.board[0][0] === this.board[1][1] && this.board[1][1] === this.board[2][2]) ||
-      (this.board[0][2] !== 0 && this.board[0][2] === this.board[1][1] && this.board[1][1] === this.board[2][0])) {
-      this.setWinner();
+    // Cheking diagonals
+    if((board[0][0] !== 0 && board[0][0] === board[1][1] && board[1][1] === board[2][2]) ||
+      (board[0][2] !== 0 && board[0][2] === board[1][1] && board[1][1] === board[2][0])) {
+      this.setResult();
       isFinished = true;
     }
 
-    // Check DRAW
-    //     this.emptyCells = function() {
-    //     var indexes = [];
-    //     for(var i = 0; i < 9 ; i++) {
-    //         boardCell = board[i];
-    //       
-    //               if(this.board[i] === 0) {
-    //               indexes.push(i);
-    //         }
-    //       }
-    //     
-    //     return indexes;
-    // }
+    this.moveCounter += 1;
 
-    //     var available = this.emptyCells();
-    //     if(available.length == 0) {
-    //         //the game is draw
-    //         this.result = "draw"; //update the state result
-    //         return true;
-    //     }
+    // Check DRAW
+    if (this.moveCounter === 9 && !isFinished) {
+      isFinished = true;
+      this.setResult(true);
+    }
 
     return isFinished;
   }
 
-  Game.prototype.setWinner = function() {
-    this.winner = this.activePlayer;
-    players[this.activePlayer].wins += 1;
-    players[this.passivePlayer].losses += 1;
-    // players[this.emptyCells].draws += 1;
-    console.log(players);
+  Game.prototype.setResult = function(draw) {
+    this.winner = draw ? 'Draw' : this.activePlayerId;
+
+    if (draw) {
+      players[this.activePlayerId].update('draws');
+      players[this.passivePlayerId].update('draws');
+      score['scored'] += 1;
+    } else {
+      players[this.activePlayerId].update('wins');
+      players[this.passivePlayerId].update('losses');
+      score['score' + this.activePlayerId] += 1;
+    }
   }
 
 
@@ -137,19 +142,19 @@ window.onload = function() {
 
   // Events Subsciptions
   newGameButton.onclick = initGame;
+
   swapButton.onclick = function() {
     // Swap players
     players.reverse();
     changePlayerName();
   };
   table.onclick = function(e) {
-    players[activeGame.activePlayer].move(e);
-
+    activeGame.move(e);
   };
 
   function initPlayer() {
     for (var i = 0; i < playerInput.length; i++) {
-      players.push(new Player(i, playerInput[i].name, signs[i]));
+      players.push(new Player(i, playerInput[i].name, signsArray[i]));
       // Save players to LS.
       (function(j) {
         playerInput[j].onchange = function(e) {
@@ -161,42 +166,62 @@ window.onload = function() {
   }
 
   function initGame() {
-    // to-do clean everything on board
-    games.push(new Game(games.length, 0, 1));
+    games.push(new Game(games.length, players[0].id, players[1].id));
     table.className = '';
     swapButton.className = '';
     activeGame = games[games.length - 1];
 
     changePlayerName();
+    cleanCells();
   }
 
+  function cleanCells() {
+    for (var i = 0; i < 9; i++) {
+      boardCell[i].className = boardCell[i].className.replace('disabled', '');
+      updateHTML(boardCell[i].id, '');
+    }
+  }
+
+  /**
+   * Set store
+   * This function does something
+   *
+   * @params {string} player
+   * @return {boolean} 
+   *
+   **/
   function setScore() {
-    for (var a in score) { // rename a
-      updateHTML(a + '-num', a, score[a])
+    for (var scoreItem in score) {
+      updateHTML(scoreItem, score[scoreItem])
     }
 
     localStorage.setItem('score', JSON.stringify(score));
   }
 
   function changePlayerName() {
-    updateHTML('nextPlayer', 'player-name', players[activeGame.activePlayer].name);
+    updateHTML('player-name', players[activeGame.activePlayerId].name);
+
+    for (var i = 0; i < 2; i++) {
+      playerInput[i].value = players[i].name + ' - ' + players[i].sign;
+    }
   }
 
-  function updateHTML(childId, parentId, text) { // rename
+  function updateCell(cell.id, sign) {
+    updateHTML(cell.id, sign)
+    cell.className += ' disabled';
+    swapButton.className = 'disabled';
+  }
+
+  function updateHTML(parentId, text) { // rename
     var el = document.createElement('span'),
-        elOld = document.getElementById(childId),
+        elOld = document.getElementById(parentId + '-child'),
         parentEl = document.getElementById(parentId);
 
     if (elOld) {
       parentEl.removeChild(elOld);
     }
     el.innerHTML = text;
-    el.setAttribute('id', childId);
+    el.setAttribute('id', parentId + '-child');
     parentEl.appendChild(el);
   }
 };
-
-
-
-
-
