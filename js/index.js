@@ -71,30 +71,49 @@ window.onload = function() {
 
   Game.prototype.isFinished = function() {
     var isFinished = false;
-    var B = this.board; // rename
+    
 
     // Check if game is finished;
     for(var i = 0; i <= 2 ; i++) {
-      if(B[i][0] !== 0 && B[i][0] === B[i][1] && B[i][1] === B[i][2]) {
+      if(this.board[i][0] !== 0 && this.board[i][0] === this.board[i][1] && this.board[i][1] === this.board[i][2]) {
         this.setWinner();
         isFinished = true;
       }
     }
 
     for(var i = 0; i <= 2 ; i++) {
-      if(B[0][i] !== 0 && B[0][i] === B[1][i] && B[1][i] === B[2][i]) {
+      if(this.board[0][i] !== 0 && this.board[0][i] === this.board[1][i] && this.board[1][i] === this.board[2][i]) {
         this.setWinner();
         isFinished = true;
       }
     }
 
-    if((B[0][0] !== 0 && B[0][0] === B[1][1] && B[1][1] === B[2][2]) ||
-      (B[0][2] !== 0 && B[0][2] === B[1][1] && B[1][1] === B[2][0])) {
+    if((this.board[0][0] !== 0 && this.board[0][0] === this.board[1][1] && this.board[1][1] === this.board[2][2]) ||
+      (this.board[0][2] !== 0 && this.board[0][2] === this.board[1][1] && this.board[1][1] === this.board[2][0])) {
       this.setWinner();
       isFinished = true;
     }
 
     // Check DRAW
+    //     this.emptyCells = function() {
+    //     var indexes = [];
+    //     for(var i = 0; i < 9 ; i++) {
+    //         boardCell = board[i];
+    //       
+    //               if(this.board[i] === 0) {
+    //               indexes.push(i);
+    //         }
+    //       }
+    //     
+    //     return indexes;
+    // }
+
+    //     var available = this.emptyCells();
+    //     if(available.length == 0) {
+    //         //the game is draw
+    //         this.result = "draw"; //update the state result
+    //         return true;
+    //     }
 
     return isFinished;
   }
@@ -103,7 +122,7 @@ window.onload = function() {
     this.winner = this.activePlayer;
     players[this.activePlayer].wins += 1;
     players[this.passivePlayer].losses += 1;
-
+    // players[this.emptyCells].draws += 1;
     console.log(players);
   }
 
@@ -142,7 +161,7 @@ window.onload = function() {
   }
 
   function initGame() {
-    // clean everything
+    // to-do clean everything on board
     games.push(new Game(games.length, 0, 1));
     table.className = '';
     swapButton.className = '';
