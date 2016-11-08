@@ -7,6 +7,7 @@
 // - Save games to file.
 // - Cross the winning line.
 
+
 window.onload = function() {
   var playerInput = document.getElementsByClassName('player'),
       newGameButton = document.getElementById('new-game'),
@@ -61,7 +62,7 @@ window.onload = function() {
     }
 
     this.board[row][col] = sign;
-    updateCell(cell.id, sign);
+    updateCell(cell, sign);
 
     if (this.isFinished()) {
       // TODO finishing stuff (players to LS)
@@ -166,11 +167,10 @@ window.onload = function() {
   }
 
   function initGame() {
-    games.push(new Game(games.length, players[0].id, players[1].id));
+    games.push(new Game(games.length, 0, 1));
     table.className = '';
     swapButton.className = '';
     activeGame = games[games.length - 1];
-
     changePlayerName();
     cleanCells();
   }
@@ -184,11 +184,6 @@ window.onload = function() {
 
   /**
    * Set store
-   * This function does something
-   *
-   * @params {string} player
-   * @return {boolean} 
-   *
    **/
   function setScore() {
     for (var scoreItem in score) {
@@ -206,13 +201,13 @@ window.onload = function() {
     }
   }
 
-  function updateCell(cell.id, sign) {
-    updateHTML(cell.id, sign)
+  function updateCell(cell, sign) {
     cell.className += ' disabled';
     swapButton.className = 'disabled';
+    updateHTML(cell.id, sign);
   }
 
-  function updateHTML(parentId, text) { // rename
+  function updateHTML(parentId, text) {
     var el = document.createElement('span'),
         elOld = document.getElementById(parentId + '-child'),
         parentEl = document.getElementById(parentId);
